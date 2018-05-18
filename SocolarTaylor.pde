@@ -18,24 +18,32 @@ void setup()
   noLoop();
 }
 
+void setFillToRandomPastel() {
+   fill(50+int(random(10))*10,50+int(random(10))*10,50+int(random(10))*10);
+}
+
 void drawTile(float x,float y,float radius, float orient)
 {
+  pushMatrix();
+  translate(x,y);
+  scale(radius);
+  rotate(orient+PI);
   float angularStep=PI/3;
-  float v=radius/5.;
-  float q=radius/10.;
-  float d=radius/6.;
+  float v=1./5.;
+  float q=1.10.;
+  float d=1./6.;
   beginShape();
   for(int i=0;i<6;++i) {
-     float vx=sin(orient+angularStep*i+PI);
-     float vy=cos(orient+angularStep*i+PI);
-     float cornerx=x+radius*vx;
-     float cornery=y+radius*vy;
+     float vx=sin(angularStep*i);
+     float vy=cos(angularStep*i);
+     float cornerx=vx;
+     float cornery=vy;
      vertex(cornerx,cornery);
-     vx=sin(orient+angularStep*(i+0.5)+PI);
-     vy=cos(orient+angularStep*(i+0.5)+PI);
+     vx=sin(angularStep*(i+0.5));
+     vy=cos(angularStep*(i+0.5));
      float whichway=(i==0 || i==3 || i==5)?0:1;
-     float px=cornerx+vy*(radius/2-v-q*whichway);    
-     float py=cornery-vx*(radius/2-v-q*whichway);
+     float px=cornerx+vy*(1./2.-v-q*whichway);    
+     float py=cornery-vx*(1./2.-v-q*whichway);
      vertex(px,py);
      px=px-vx*d;
      py=py-vy*d;
@@ -51,20 +59,20 @@ void drawTile(float x,float y,float radius, float orient)
 // Large paired rectangles
   for(int i=0;i<6;++i) {
      float sign=(i==2 || i==5 || i==4)?-1:1;
-     float vx=sin(orient+angularStep*i+PI);
-     float vy=cos(orient+angularStep*i+PI);
+     float vx=sin(angularStep*i);
+     float vy=cos(angularStep*i);
      beginShape();
-       vertex(x+(radius+radius/2-v)*vx,y+(radius+radius/2-v)*vy);
-       vertex(x+(radius+radius/2)*vx,y+(radius+radius/2)*vy);
-       vertex(x+(radius+radius/2)*vx+d*vy*sign,y+(radius+radius/2)*vy-d*vx*sign);
-       vertex(x+(radius+radius/2-v)*vx+d*vy*sign,y+(radius+radius/2-v)*vy-d*vx*sign);
+       vertex((1+1./2-v)*vx,(1+1./2-v)*vy);
+       vertex((1+1./2)*vx,(1+1./2)*vy);
+       vertex((1+1./2)*vx+d*vy*sign,(1+1./2)*vy-d*vx*sign);
+       vertex((1+1./2-v)*vx+d*vy*sign,(1+1./2-v)*vy-d*vx*sign);
      endShape(CLOSE);
 
      beginShape();
-       vertex(x+(radius+radius/2+v)*vx,y+(radius+radius/2+v)*vy);
-       vertex(x+(radius+radius/2)*vx,y+(radius+radius/2)*vy);
-       vertex(x+(radius+radius/2)*vx-d*vy*sign,y+(radius+radius/2)*vy+d*vx*sign);
-       vertex(x+(radius+radius/2+v)*vx-d*vy*sign,y+(radius+radius/2+v)*vy+d*vx*sign);
+       vertex((1+1./2+v)*vx,(1+1./2+v)*vy);
+       vertex((1+1./2)*vx,(1+1./2)*vy);
+       vertex((1+1./2)*vx-d*vy*sign,y+(1+1./2)*vy+d*vx*sign);
+       vertex((1+1./2)+v)*vx-d*vy*sign,y+(1+1./2+v)*vy+d*vx*sign);
      endShape(CLOSE);
   }
   // small interlocking rectangles
@@ -135,6 +143,8 @@ void drawTile(float x,float y,float radius, float orient)
   toparrowx,toparrowy);
   line(toparrowx,toparrowy,toparrowx+headlength*sin(orient+PI/6),toparrowy+headlength*cos(orient+PI/6));
   line(toparrowx,toparrowy,toparrowx+headlength*sin(orient-PI/6),toparrowy+headlength*cos(orient-PI/6));
+  // make the arrow chiral, so we can see the reflection
+  line(toparrowx+headlength*sin(orient-PI/6),toparrowy+headlength*cos(orient-PI/6), toparrowx+headlength*sin(orient)*cos(PI/6),toparrowy+headlength*cos(orient)*cos(PI/6) );
 }
 class Point
 {
@@ -152,6 +162,12 @@ Point hexIndexToCartesian(int column, int row, float radius)
   pos.y=row*radius*1.5;
   return pos;
 }
+void drawTileAtHexIndex(int hex1,int hex2, float radius, float orientation)
+{
+  setFillToRandomPastel();
+  Point pos=hexIndexToCartesian(hex1, hex2, radius);
+  drawTile(pos.x+width/2,pos.y+height/2,radius,PI/3*2);
+}
 void draw()
 {
   if (makePDF) {
@@ -166,16 +182,9 @@ void draw()
  //   }
  // }
   stroke(0);
-  fill(128,100,100);
-  Point pos=hexIndexToCartesian(0, 0, radius);
-  drawTile(pos.x+width/2,pos.y+height/2,radius,0);
-
-  fill(100,128,100);
-  pos=hexIndexToCartesian(0, 1, radius);
-  drawTile(pos.x+width/2,pos.y+height/2,radius,PI/3*2);
-  
-  //drawTile(50,75,100,0);
-  //drawTile(300,400,125,PI/12);
+  drawTileAtHexIndex(0,0,radius,0);
+  drawTileAtHexIndex(0,1,radius,PI/3/2);
+  drawTileAtHexIndex(1,0,radius,PI/3/2);
   
   if(makePDF) {
      endRecord();
